@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Image } from "react-native";
-
 import { getPerfumes } from "@/services/perfumes";
 import { useOnboardingStore } from "@/stores/useOnboardingStore";
 import type { Perfume } from "@/utils/types";
@@ -26,13 +24,6 @@ export function useOnboardingCatalog(searchQuery = "") {
       .then((perfumes) => {
         if (cancelled) return;
         setCatalogPerfumes(perfumes);
-        perfumes
-          .slice(0, 32)
-          .map((perfume) => perfume.imageUrl)
-          .filter((value): value is string => Boolean(value))
-          .forEach((url) => {
-            Image.prefetch(url).catch(() => undefined);
-          });
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

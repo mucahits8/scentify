@@ -1,9 +1,10 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { PerfumeVisual } from "@/components/perfume/PerfumeVisual";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { StackHeader } from "@/components/ui/StackHeader";
@@ -85,6 +86,25 @@ export default function PostDetailScreen() {
   const quickReplies = [copy.quickReply1, copy.quickReply2, copy.quickReply3];
   const isSaved = !!post && savedPostIds.includes(post.id);
   const isArchived = !!post && archivedPostIds.includes(post.id);
+  const postPerfumeVisual = post
+    ? {
+        id: post.perfumeId ?? post.id,
+        name: post.perfumeName ?? post.type,
+        brand: post.perfumeBrand ?? "Scentify",
+        gender: "unisex" as const,
+        topNotes: [],
+        midNotes: [],
+        baseNotes: [],
+        families: ["Fresh"],
+        longevity: 0,
+        projection: 0,
+        seasons: [],
+        occasions: [],
+        impressions: [],
+        priceRange: "$$" as const,
+        scentVector: [],
+      }
+    : null;
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -169,7 +189,7 @@ export default function PostDetailScreen() {
           <Text style={styles.postCaption}>{post.caption}</Text>
           {post.mediaUrl ? (
             <View style={styles.mediaWrap}>
-              <Image source={{ uri: post.mediaUrl }} style={styles.postMedia} />
+              {postPerfumeVisual ? <PerfumeVisual perfume={postPerfumeVisual} height={220} variant="card" /> : null}
             </View>
           ) : null}
           {post.perfumeName ? (
@@ -328,11 +348,6 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       borderWidth: 1,
       borderColor: colors.borderLight,
       backgroundColor: colors.surfaceAlt,
-    },
-    postMedia: {
-      width: "100%",
-      aspectRatio: 4 / 3,
-      resizeMode: "cover",
     },
     perfumePill: {
       alignSelf: "flex-start",

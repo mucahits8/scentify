@@ -2,7 +2,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,10 +12,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { PerfumeVisual } from "@/components/perfume/PerfumeVisual";
 import { TabBarIcon } from "@/components/ui/TabBarIcon";
 import { useCollectionStore } from "@/stores/useCollectionStore";
 import { useUserStore } from "@/stores/useUserStore";
-import { FAMILY_GRADIENTS, FONTS, RADIUS, SHADOWS, SPACING } from "@/utils/constants";
+import { FONTS, RADIUS, SHADOWS, SPACING } from "@/utils/constants";
 import { useI18n } from "@/utils/i18n";
 import type { CollectionItem } from "@/utils/types";
 
@@ -24,25 +24,12 @@ type ProfileTab = "collection" | "wishlist" | "following";
 
 // Perfume grid thumbnail
 function PerfumeThumbnail({ item, size, onPress }: { item: CollectionItem; size: number; onPress: () => void }) {
-  const { isDark } = useTheme();
-  const [imgFailed, setImgFailed] = useState(false);
-  const family = item.perfume.families?.[0];
-  const [g0, g1] = (family ? FAMILY_GRADIENTS[family] : undefined) ?? FAMILY_GRADIENTS.Default;
-
   return (
     <Pressable
       style={{ width: size, height: size, borderRadius: RADIUS.md, overflow: "hidden" }}
       onPress={onPress}
     >
-      <LinearGradient colors={[g0, g1]} style={StyleSheet.absoluteFill} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} />
-      {item.perfume.imageUrl && !imgFailed ? (
-        <Image
-          source={{ uri: item.perfume.imageUrl }}
-          style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "90%" }}
-          resizeMode="contain"
-          onError={() => setImgFailed(true)}
-        />
-      ) : null}
+      <PerfumeVisual perfume={item.perfume} height={size} variant="thumb" />
       <LinearGradient
         colors={["transparent", "rgba(16,12,9,0.6)"]}
         style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "50%" }}

@@ -1,19 +1,13 @@
-import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useRef, useState } from "react";
-import { Animated, Easing, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useMotionProfile } from "@/hooks/useMotionProfile";
-import { EditorialVisual } from "@/components/ui/EditorialVisual";
-import { FAMILY_GRADIENTS, FONTS, RADIUS, SHADOWS, SPACING } from "@/utils/constants";
+import { PerfumeVisual } from "@/components/perfume/PerfumeVisual";
+import { FONTS, RADIUS, SHADOWS, SPACING } from "@/utils/constants";
 import { useI18n } from "@/utils/i18n";
 import { localizeScentLabel } from "@/utils/scentLabels";
 import type { Perfume } from "@/utils/types";
-
-function familyGradient(perfume: Perfume): [string, string] {
-  const family = perfume.families?.[0];
-  return (family ? FAMILY_GRADIENTS[family] : undefined) ?? FAMILY_GRADIENTS.Default;
-}
 
 export function PerfumeCard({
   perfume,
@@ -26,8 +20,6 @@ export function PerfumeCard({
   onPress?: () => void;
   selected?: boolean;
 }) {
-  const [gradStart, gradEnd] = familyGradient(perfume);
-  const [imageFailed, setImageFailed] = useState(false);
   const motion = useMotionProfile();
   const { colors, isDark } = useTheme();
   const { language } = useI18n();
@@ -105,32 +97,9 @@ export function PerfumeCard({
       <View style={styles.card}>
         {/* Image / gradient placeholder */}
         <View style={styles.imageWrap}>
-          {perfume.imageUrl && !imageFailed ? (
-            <Animated.Image
-              source={{ uri: perfume.imageUrl }}
-              style={[StyleSheet.absoluteFill, imageFloatStyle]}
-              resizeMode="cover"
-              onError={() => setImageFailed(true)}
-            />
-          ) : (
-            <>
-              <Animated.View style={[StyleSheet.absoluteFill, imageFloatStyle]}>
-                <LinearGradient
-                  colors={[gradStart, gradEnd]}
-                  style={StyleSheet.absoluteFill}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                />
-                <EditorialVisual label="hero · perfume bottle" tone="warm" height={156} />
-              </Animated.View>
-            </>
-          )}
-          {imageFailed ? (
-            <>
-              <View style={styles.imageVeil} />
-              <EditorialVisual label="hero · perfume bottle" tone="warm" height={156} />
-            </>
-          ) : null}
+          <Animated.View style={[StyleSheet.absoluteFill, imageFloatStyle]}>
+            <PerfumeVisual perfume={perfume} height={156} />
+          </Animated.View>
 
           {/* Family label on image */}
           {perfume.families?.[0] ? (
@@ -183,10 +152,6 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"], isDark: boo
       position: "relative",
       overflow: "hidden",
       backgroundColor: colors.surfaceMuted,
-    },
-    imageVeil: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: isDark ? "rgba(28,24,21,0.20)" : "rgba(255,255,255,0.18)",
     },
     familyPill: {
       position: "absolute",

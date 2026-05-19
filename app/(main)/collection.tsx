@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Image, LayoutAnimation, Platform, Pressable, ScrollView, StyleSheet, Text, UIManager, View } from "react-native";
+import { LayoutAnimation, Platform, Pressable, ScrollView, StyleSheet, Text, UIManager, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { PerfumeVisual } from "@/components/perfume/PerfumeVisual";
 import { TabBarIcon } from "@/components/ui/TabBarIcon";
 import { useScanStore } from "@/stores/useScanStore";
 import { useCollectionStore } from "@/stores/useCollectionStore";
@@ -173,16 +173,7 @@ export default function CollectionScreen() {
                 onPress={() => router.push(`/collection/${item.perfume.id}` as never)}
               >
                 <View style={styles.gridImageWrap}>
-                  {item.perfume.imageUrl ? (
-                    <Image source={{ uri: item.perfume.imageUrl }} style={styles.gridImage} />
-                  ) : (
-                    <LinearGradient
-                      colors={["#2A241D", "#12100E"]}
-                      style={styles.gridFallback}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                    />
-                  )}
+                  <PerfumeVisual perfume={item.perfume} height={156} variant="card" />
                   <View style={styles.gridBadge}>
                     <Text style={styles.gridBadgeText}>
                       {item.status === "owned" ? statusLabel.owned : item.status === "wishlist" ? statusLabel.wishlist : statusLabel.sampled}
@@ -361,15 +352,6 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       height: 148,
       position: "relative",
       backgroundColor: colors.surface,
-    },
-    gridImage: {
-      width: "100%",
-      height: "100%",
-      resizeMode: "cover",
-    },
-    gridFallback: {
-      width: "100%",
-      height: "100%",
     },
     gridBadge: {
       position: "absolute",

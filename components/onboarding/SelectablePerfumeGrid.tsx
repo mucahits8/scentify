@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Animated, Easing, Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { Animated, Easing, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useMotionProfile } from "@/hooks/useMotionProfile";
-import { FAMILY_GRADIENTS, FONTS, RADIUS } from "@/utils/constants";
+import { PerfumeVisual } from "@/components/perfume/PerfumeVisual";
+import { FONTS, RADIUS } from "@/utils/constants";
 import type { Perfume } from "@/utils/types";
 
 function PerfumeCard({
@@ -32,13 +32,10 @@ function PerfumeCard({
   motionDistanceScale: number;
   motionParallaxScale: number;
 }) {
-  const [isLoading, setIsLoading] = useState(!!item.imageUrl);
-  const [imageFailed, setImageFailed] = useState(false);
   const introValue = useRef(new Animated.Value(0)).current;
   const pressValue = useRef(new Animated.Value(0)).current;
   const selectedPulse = useRef(new Animated.Value(selected ? 1 : 0)).current;
   const descriptor = item.impressions?.slice(0, 2).join(" · ") || item.families?.slice(0, 2).join(" · ");
-  const gradientColors = FAMILY_GRADIENTS[item.families?.[0] ?? ""] ?? (isDark ? [colors.surfaceAlt, colors.surface] : ["#E8D9C8", "#D7C5B2"]);
 
   useEffect(() => {
     introValue.setValue(0);
@@ -135,27 +132,7 @@ function PerfumeCard({
       >
         <View style={styles.imageWrap}>
           <Animated.View style={[StyleSheet.absoluteFill, imageParallax]}>
-            {/* Always render the gradient as the base layer (fallback / loading background). */}
-            <LinearGradient colors={gradientColors as [string, string]} style={StyleSheet.absoluteFill} />
-            {item.imageUrl && !imageFailed ? (
-              <>
-                <Image
-                  source={{ uri: item.imageUrl }}
-                  style={styles.image}
-                  resizeMode="cover"
-                  onLoadEnd={() => setIsLoading(false)}
-                  onError={() => {
-                    setImageFailed(true);
-                    setIsLoading(false);
-                  }}
-                />
-                {isLoading ? (
-                  <View style={[StyleSheet.absoluteFill, styles.loadingOverlay]}>
-                    <ActivityIndicator size="small" color={isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.25)"} />
-                  </View>
-                ) : null}
-              </>
-            ) : null}
+            <PerfumeVisual perfume={item} height={150} />
           </Animated.View>
           {item.families?.[0] ? (
             <View style={styles.familyPill}>
@@ -252,15 +229,6 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"], isDark: boo
       height: 176,
       position: "relative",
       backgroundColor: colors.surfaceMuted,
-    },
-    image: {
-      width: "100%",
-      height: "100%",
-    },
-    loadingOverlay: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
     },
     familyPill: {
       position: "absolute",

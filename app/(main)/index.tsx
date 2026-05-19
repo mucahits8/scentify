@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { PerfumeVisual } from "@/components/perfume/PerfumeVisual";
 import { TabBarIcon } from "@/components/ui/TabBarIcon";
 import { listCommunityPosts, subscribeToCommunityFeed, type CommunityPost } from "@/services/community";
 import { editorialArticles } from "@/services/editorial";
@@ -67,7 +67,6 @@ function HeroCard({
   const { colors, isDark } = useTheme();
   const { language } = useI18n();
   const { width } = useWindowDimensions();
-  const [imgFailed, setImgFailed] = useState(false);
   const [grad0, grad1] = familyGrad(rec.perfume);
   const cardWidth = width - SPACING.xxl * 2;
   const styles = useMemo(() => heroStyles(colors, isDark), [colors, isDark]);
@@ -85,15 +84,7 @@ function HeroCard({
         end={{ x: 0.8, y: 1 }}
       />
 
-      {/* perfume image */}
-      {rec.perfume.imageUrl && !imgFailed ? (
-        <Image
-          source={{ uri: rec.perfume.imageUrl }}
-          style={styles.heroImage}
-          resizeMode="contain"
-          onError={() => setImgFailed(true)}
-        />
-      ) : null}
+      <PerfumeVisual perfume={rec.perfume} height={cardWidth * 0.72} variant="hero" />
 
       {/* dark bottom overlay */}
       <LinearGradient
@@ -135,7 +126,6 @@ function MiniCard({
 }) {
   const { colors, isDark } = useTheme();
   const { language } = useI18n();
-  const [imgFailed, setImgFailed] = useState(false);
   const [grad0, grad1] = familyGrad(rec.perfume);
   const styles = useMemo(() => miniStyles(colors, isDark), [colors, isDark]);
   const family = rec.perfume.families?.[0];
@@ -150,14 +140,7 @@ function MiniCard({
           start={{ x: 0.2, y: 0 }}
           end={{ x: 0.8, y: 1 }}
         />
-        {rec.perfume.imageUrl && !imgFailed ? (
-          <Image
-            source={{ uri: rec.perfume.imageUrl }}
-            style={styles.image}
-            resizeMode="contain"
-            onError={() => setImgFailed(true)}
-          />
-        ) : null}
+        <PerfumeVisual perfume={rec.perfume} height={150} variant="card" />
         <LinearGradient
           colors={["transparent", "rgba(16,12,9,0.6)"]}
           style={styles.miniOverlay}
@@ -629,7 +612,27 @@ export default function HomeScreen() {
                     <Text style={styles.communityCardMeta}>{communityFeaturedPost.authorName} · {communityFeaturedPost.type.toUpperCase()}</Text>
                     {communityFeaturedPost.mediaUrl ? (
                       <View style={styles.communityFeaturedMediaWrap}>
-                        <Image source={{ uri: communityFeaturedPost.mediaUrl }} style={styles.communityFeaturedMedia} />
+                        <PerfumeVisual
+                          perfume={{
+                            id: communityFeaturedPost.perfumeId ?? communityFeaturedPost.id,
+                            name: communityFeaturedPost.perfumeName ?? communityFeaturedPost.type,
+                            brand: communityFeaturedPost.perfumeBrand ?? "Scentify",
+                            gender: "unisex",
+                            topNotes: [],
+                            midNotes: [],
+                            baseNotes: [],
+                            families: ["Fresh"],
+                            longevity: 0,
+                            projection: 0,
+                            seasons: [],
+                            occasions: [],
+                            impressions: [],
+                            priceRange: "$$",
+                            scentVector: [],
+                          }}
+                          height={184}
+                          variant="card"
+                        />
                       </View>
                     ) : null}
                     <Text style={styles.communityFeaturedBody} numberOfLines={4}>{communityFeaturedPost.caption}</Text>
@@ -672,7 +675,27 @@ export default function HomeScreen() {
                       <Text style={styles.communityCardMeta}>{post.authorName} · {post.type.toUpperCase()}</Text>
                       {post.mediaUrl ? (
                         <View style={styles.communityMediaWrap}>
-                          <Image source={{ uri: post.mediaUrl }} style={styles.communityMedia} />
+                          <PerfumeVisual
+                            perfume={{
+                              id: post.perfumeId ?? post.id,
+                              name: post.perfumeName ?? post.type,
+                              brand: post.perfumeBrand ?? "Scentify",
+                              gender: "unisex",
+                              topNotes: [],
+                              midNotes: [],
+                              baseNotes: [],
+                              families: ["Fresh"],
+                              longevity: 0,
+                              projection: 0,
+                              seasons: [],
+                              occasions: [],
+                              impressions: [],
+                              priceRange: "$$",
+                              scentVector: [],
+                            }}
+                            height={120}
+                            variant="thumb"
+                          />
                         </View>
                       ) : null}
                       <Text style={styles.communityCardBody} numberOfLines={2}>{post.caption}</Text>

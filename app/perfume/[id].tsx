@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  Image,
   LayoutAnimation,
   Platform,
   Pressable,
@@ -22,6 +21,7 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { PerfumeCard } from "@/components/perfume/PerfumeCard";
+import { PerfumeVisual } from "@/components/perfume/PerfumeVisual";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
@@ -81,7 +81,6 @@ export default function PerfumeDetailScreen() {
   const [similarPerfumes, setSimilarPerfumes] = useState<Perfume[]>([]);
   const [reviews, setReviews] = useState<PerfumeReview[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
-  const [imageFailed, setImageFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeHeroSlide, setActiveHeroSlide] = useState(0);
@@ -270,8 +269,8 @@ export default function PerfumeDetailScreen() {
             {heroSlides.map((slide) => (
               <View key={slide} style={[styles.heroSlide, { width: viewportWidth }]}>
                 <LinearGradient colors={gradientColors} style={StyleSheet.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
-                {slide === "bottle" && perfume.imageUrl && !imageFailed ? (
-                  <Image source={{ uri: perfume.imageUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" onError={() => setImageFailed(true)} />
+                {slide === "bottle" ? (
+                  <PerfumeVisual perfume={perfume} height={560} variant="hero" />
                 ) : null}
                 {slide === "mood" ? (
                   <View style={styles.heroMoodWrap}>
