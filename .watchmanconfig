@@ -1,0 +1,10 @@
+{
+  "ignore_dirs": [
+    ".expo",
+    ".next",
+    "ios/build",
+    "android/build",
+    "dist",
+    "coverage"
+  ]
+}
