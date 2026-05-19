@@ -36,6 +36,17 @@ type RatingReviewRow = {
 };
 
 const LOCAL_REVIEW_STORE = new Map<string, PerfumeReview[]>();
+const REMOTE_QUERY_TIMEOUT_MS = 1200;
+
+function withTimeout<T>(promise: PromiseLike<T>, ms = REMOTE_QUERY_TIMEOUT_MS): Promise<T> {
+  const normalizedPromise = Promise.resolve(promise);
+  return Promise.race([
+    normalizedPromise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new Error("Remote query timed out.")), ms);
+    }),
+  ]);
+}
 
 function clampRating(value: number) {
   return Math.max(1, Math.min(5, Math.round(value)));
@@ -118,13 +129,13 @@ export async function listPerfumeReviews(perfumeId: string, limit = 12): Promise
 
   if (isSupabaseConfigured) {
     try {
-      const { data, error } = await requireSupabase()
+      const { data, error } = await withTimeout(requireSupabase()
         .from("ratings")
         .select("id,perfume_id,user_id,score,review_text,created_at")
         .eq("perfume_id", normalized)
         .not("review_text", "is", null)
         .order("created_at", { ascending: false })
-        .limit(limit);
+        .limit(limit));
 
       if (!error && Array.isArray(data)) {
         const reviewRows = (data as RatingReviewRow[]).filter((row) => (row.review_text ?? "").trim().length > 0);
@@ -132,10 +143,10 @@ export async function listPerfumeReviews(perfumeId: string, limit = 12): Promise
         const profileById = new Map<string, ReviewAuthor>();
 
         if (userIds.length > 0) {
-          const { data: profileRows } = await requireSupabase()
+          const { data: profileRows } = await withTimeout(requireSupabase()
             .from("user_public_profiles")
             .select("user_id,display_name,headline,avatar_url,bio")
-            .in("user_id", userIds);
+            .in("user_id", userIds));
 
           (profileRows as PublicProfileRow[] | null)?.forEach((row) => {
             profileById.set(row.user_id, mapPublicProfile(row));

@@ -3,6 +3,7 @@ import { mockBrands, mockPerfumers, mockPerfumes } from "@/services/mock-data";
 import type { Brand, Perfume, Perfumer } from "@/utils/types";
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
+const REMOTE_QUERY_TIMEOUT_MS = 1200;
 
 type CachedValue<T> = {
   data: T;
@@ -11,6 +12,16 @@ type CachedValue<T> = {
 
 let cachedAllPerfumes: CachedValue<Perfume[]> | null = null;
 const cachedPerfumesByLimit = new Map<number, CachedValue<Perfume[]>>();
+
+function withTimeout<T>(promise: PromiseLike<T>, ms = REMOTE_QUERY_TIMEOUT_MS): Promise<T> {
+  const normalizedPromise = Promise.resolve(promise);
+  return Promise.race([
+    normalizedPromise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new Error("Remote query timed out.")), ms);
+    }),
+  ]);
+}
 
 function isCacheFresh(ts: number) {
   return Date.now() - ts < CACHE_TTL_MS;
@@ -207,11 +218,11 @@ export async function getPerfumesPage(page: number): Promise<{ data: Perfume[]; 
   }
 
   try {
-    const { data, error, count } = await requireSupabase()
+    const { data, error, count } = await withTimeout(requireSupabase()
       .from("perfumes")
       .select("*", { count: "exact" })
       .order("rating_count", { ascending: false })
-      .range(from, to);
+      .range(from, to));
 
     if (error) throw error;
     const mapped = (data ?? []).map((row) => mapPerfumeRow(row as PerfumeRow));
@@ -241,12 +252,12 @@ export async function getPerfumesByFamily(family: string, page: number): Promise
   }
 
   try {
-    const { data, error, count } = await requireSupabase()
+    const { data, error, count } = await withTimeout(requireSupabase()
       .from("perfumes")
       .select("*", { count: "exact" })
       .contains("families", [normalizedFamily])
       .order("rating_count", { ascending: false })
-      .range(from, to);
+      .range(from, to));
 
     if (error) throw error;
     const mapped = (data ?? []).map((row) => mapPerfumeRow(row as PerfumeRow));
@@ -293,7 +304,7 @@ export async function getPerfumes(limit?: number) {
 
     if (typeof limit === "number") query.limit(limit);
 
-    const { data, error } = await query;
+    const { data, error } = await withTimeout(query);
     if (error) throw error;
     const mapped = (data ?? []).map((row) => mapPerfumeRow(row as PerfumeRow));
     if (mapped.length > 0) {
@@ -318,12 +329,12 @@ export async function getPerfumeById(id: string) {
   }
 
   try {
-    const { data, error } = await requireSupabase()
+    const { data, error } = await withTimeout(requireSupabase()
       .from("perfumes")
       .select("*")
       .or(`id.eq.${normalizedId},slug.eq.${normalizedId}`)
       .limit(1)
-      .maybeSingle();
+      .maybeSingle());
 
     if (error) throw error;
     if (data) return mapPerfumeRow(data as PerfumeRow);
@@ -359,12 +370,12 @@ export async function searchPerfumes(query: string) {
   }
 
   try {
-    const { data, error } = await requireSupabase()
+    const { data, error } = await withTimeout(requireSupabase()
       .from("perfumes")
       .select("*")
       .or(`name.ilike.%${normalized}%,brand.ilike.%${normalized}%`)
       .order("rating_count", { ascending: false })
-      .limit(24);
+      .limit(24));
 
     if (error) throw error;
     const mapped = (data ?? []).map((row) => mapPerfumeRow(row as PerfumeRow));
@@ -382,11 +393,11 @@ export async function getBrands(limit = 16) {
   }
 
   try {
-    const { data, error } = await requireSupabase()
+    const { data, error } = await withTimeout(requireSupabase()
       .from("brands")
       .select("*")
       .order("perfume_count", { ascending: false })
-      .limit(limit);
+      .limit(limit));
 
     if (!error) return (data ?? []).map((row) => mapBrandRow(row as BrandRow));
   } catch {}
@@ -404,12 +415,12 @@ export async function searchBrands(query: string) {
   }
 
   try {
-    const { data, error } = await requireSupabase()
+    const { data, error } = await withTimeout(requireSupabase()
       .from("brands")
       .select("*")
       .ilike("name", `%${normalized}%`)
       .order("perfume_count", { ascending: false })
-      .limit(12);
+      .limit(12));
 
     if (!error) return (data ?? []).map((row) => mapBrandRow(row as BrandRow));
   } catch {}
@@ -424,7 +435,7 @@ export async function getBrandBySlug(slug: string) {
   }
 
   try {
-    const { data, error } = await requireSupabase().from("brands").select("*").eq("slug", slug).maybeSingle();
+    const { data, error } = await withTimeout(requireSupabase().from("brands").select("*").eq("slug", slug).maybeSingle());
     if (!error && data) return mapBrandRow(data as BrandRow);
   } catch {}
 
@@ -449,11 +460,11 @@ export async function getPerfumesByBrandSlug(brandSlug: string) {
   }
 
   try {
-    const { data, error } = await requireSupabase()
+    const { data, error } = await withTimeout(requireSupabase()
       .from("perfumes")
       .select("*")
       .eq("brand_slug", brandSlug)
-      .order("rating_count", { ascending: false });
+      .order("rating_count", { ascending: false }));
 
     if (!error) return (data ?? []).map((row) => mapPerfumeRow(row as PerfumeRow));
   } catch {}
@@ -468,11 +479,11 @@ export async function getPerfumers(limit = 12) {
   }
 
   try {
-    const { data, error } = await requireSupabase()
+    const { data, error } = await withTimeout(requireSupabase()
       .from("perfumers")
       .select("*")
       .order("perfume_count", { ascending: false })
-      .limit(limit);
+      .limit(limit));
 
     if (!error && data?.length) {
       return data.map((row) => mapPerfumerRow(row as PerfumerRow));
@@ -492,12 +503,12 @@ export async function searchPerfumers(query: string) {
   }
 
   try {
-    const { data, error } = await requireSupabase()
+    const { data, error } = await withTimeout(requireSupabase()
       .from("perfumers")
       .select("*")
       .ilike("name", `%${normalized}%`)
       .order("perfume_count", { ascending: false })
-      .limit(24);
+      .limit(24));
 
     if (!error && data?.length) {
       return data.map((row) => mapPerfumerRow(row as PerfumerRow));
@@ -511,7 +522,7 @@ export async function searchPerfumers(query: string) {
 export async function getPerfumerBySlug(slug: string) {
   if (isSupabaseConfigured) {
     try {
-      const { data, error } = await requireSupabase().from("perfumers").select("*").eq("slug", slug).maybeSingle();
+      const { data, error } = await withTimeout(requireSupabase().from("perfumers").select("*").eq("slug", slug).maybeSingle());
       if (!error && data) {
         return mapPerfumerRow(data as PerfumerRow);
       }
