@@ -2,7 +2,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Animated,
   Pressable,
   ScrollView,
@@ -17,7 +16,6 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import { PerfumeVisual } from "@/components/perfume/PerfumeVisual";
 import { TabBarIcon } from "@/components/ui/TabBarIcon";
 import { listCommunityPosts, subscribeToCommunityFeed, type CommunityPost } from "@/services/community";
-import { editorialArticles } from "@/services/editorial";
 import { listNotifications, subscribeNotifications } from "@/services/notifications";
 import { getForYouSections, type ForYouSections } from "@/services/recommendations";
 import { useSocialPrefsStore } from "@/stores/useSocialPrefsStore";
@@ -199,127 +197,6 @@ function CarouselSection({
   );
 }
 
-function BlogArticleCard({
-  article,
-  cardWidth,
-  anim,
-  onPress,
-}: {
-  article: (typeof editorialArticles)[number];
-  cardWidth: number;
-  anim: Animated.Value;
-  onPress: () => void;
-}) {
-  const { colors, isDark } = useTheme();
-  const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] });
-  const opacity = anim.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
-
-  return (
-    <Animated.View style={{ width: cardWidth, transform: [{ scale }], opacity }}>
-      <Pressable
-        onPress={onPress}
-        style={[blogStyles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
-      >
-        <LinearGradient
-          colors={isDark ? ["#1e1a2e", "#0d0b1a"] : ["#f5f0ff", "#ede8ff"]}
-          style={StyleSheet.absoluteFill}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-        <View style={blogStyles.cardContent}>
-          <Text style={[blogStyles.cardCategory, { color: colors.accent }]}>
-            {article.category.toUpperCase()} · {article.readMinutes} DK
-          </Text>
-          <Text style={[blogStyles.cardTitle, { color: colors.ink }]} numberOfLines={3}>
-            {article.title}
-          </Text>
-          <Text style={[blogStyles.cardExcerpt, { color: colors.inkMid }]} numberOfLines={2}>
-            {article.excerpt}
-          </Text>
-        </View>
-        <View style={[blogStyles.cardFooter, { borderTopColor: colors.border }]}>
-          <Text style={[blogStyles.cardAuthor, { color: colors.inkFaint }]}>{article.author}</Text>
-          <Text style={[blogStyles.cardReadMore, { color: colors.accent }]}>Oku →</Text>
-        </View>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
-function BlogTeaser({ onPress }: { onPress: () => void }) {
-  const { colors } = useTheme();
-  const { width } = useWindowDimensions();
-  const cardWidth = width * 0.74;
-  const anims = useRef(editorialArticles.map(() => new Animated.Value(0))).current;
-
-  useEffect(() => {
-    const animations = anims.map((anim, i) =>
-      Animated.timing(anim, {
-        toValue: 1,
-        duration: 380,
-        delay: i * 80,
-        useNativeDriver: true,
-      })
-    );
-    Animated.stagger(80, animations).start();
-  }, []);
-
-  return (
-    <View style={{ gap: SPACING.sm }}>
-      <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", paddingHorizontal: SPACING.xxl }}>
-        <Text style={{ fontFamily: FONTS.sansBold, fontSize: 10, letterSpacing: 2, color: colors.inkFaint, textTransform: "uppercase" }}>
-          BLOG · OKUMA
-        </Text>
-        <Pressable onPress={onPress}>
-          <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 12, color: colors.accent }}>Tümünü Gör →</Text>
-        </Pressable>
-      </View>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: SPACING.xxl, gap: SPACING.md }}
-        decelerationRate="fast"
-        snapToInterval={cardWidth + SPACING.md}
-        snapToAlignment="start"
-      >
-        {editorialArticles.map((article, i) => (
-          <BlogArticleCard
-            key={article.id}
-            article={article}
-            cardWidth={cardWidth}
-            anim={anims[i]}
-            onPress={() => onPress()}
-          />
-        ))}
-      </ScrollView>
-    </View>
-  );
-}
-
-const blogStyles = StyleSheet.create({
-  card: {
-    borderRadius: RADIUS.xl,
-    borderWidth: 1,
-    overflow: "hidden",
-    ...SHADOWS.soft,
-  },
-  cardContent: { padding: SPACING.lg, gap: SPACING.xs },
-  cardCategory: { fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.2 },
-  cardTitle: { fontFamily: FONTS.serif, fontSize: 20, lineHeight: 25 },
-  cardExcerpt: { fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18, marginTop: 2 },
-  cardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm + 2,
-  },
-  cardAuthor: { fontFamily: FONTS.sans, fontSize: 11 },
-  cardReadMore: { fontFamily: FONTS.sansSemiBold, fontSize: 12 },
-});
-
 export default function HomeScreen() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -330,11 +207,11 @@ export default function HomeScreen() {
   const profile = useUserStore((state) => state.profile);
 
   const [sections, setSections] = useState<ForYouSections | null>(null);
-  const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>([]);
   const loadedKeyRef = useRef<string | null>(null);
   const quickActionAnims = useRef([
+    new Animated.Value(0),
     new Animated.Value(0),
     new Animated.Value(0),
     new Animated.Value(0),
@@ -354,14 +231,11 @@ export default function HomeScreen() {
     const loadKey = `${language}|${profile?.genderPreference ?? "all"}|${scentDNA.profileTags.join("|")}`;
     if (loadedKeyRef.current === loadKey) return;
     loadedKeyRef.current = loadKey;
-    setLoading(true);
     try {
       const data = await getForYouSections(scentDNA, MOCK_WEATHER, language, profile?.genderPreference);
       setSections(data);
     } catch {
       loadedKeyRef.current = null;
-    } finally {
-      setLoading(false);
     }
   }, [language, profile?.genderPreference, scentDNA]);
 
@@ -436,6 +310,13 @@ export default function HomeScreen() {
       onPress: () => router.push("/(main)/discover" as never),
     },
     {
+      key: "journal",
+      icon: "sparkle" as const,
+      title: language === "tr" ? "Koku Yazıları" : "Journal",
+      subtitle: language === "tr" ? "Kısa rehberler" : "Short reads",
+      onPress: () => router.push("/(main)/journal" as never),
+    },
+    {
       key: "collection",
       icon: "collection" as const,
       title: language === "tr" ? "Koleksiyonum" : "Collection",
@@ -489,14 +370,29 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Weather context strip */}
-        <View style={styles.weatherStrip}>
-          <Text style={styles.weatherText}>
-            {weatherEmoji} {MOCK_WEATHER.temp}°C · {MOCK_WEATHER.condition}
-          </Text>
-          {sections?.todaysPickContext ? (
-            <Text style={styles.weatherContext}>{sections.todaysPickContext}</Text>
-          ) : null}
+        {/* Today's Pick hero */}
+        <View style={{ paddingHorizontal: SPACING.xxl, gap: SPACING.sm }}>
+          <Text style={styles.todayEyebrow}>{t("home.todayPick").toUpperCase()}</Text>
+          {hero ? (
+            <>
+              <HeroCard rec={hero} onPress={() => go(hero.perfumeId)} />
+              <Text style={styles.heroCaption}>
+                {weatherEmoji} {MOCK_WEATHER.temp}°C · {sections?.todaysPickContext ?? "Bu koku bu anın atmosferiyle eşleştirildi."}
+              </Text>
+            </>
+          ) : (
+            <View style={styles.heroPlaceholder}>
+              <Text style={styles.heroPlaceholderKicker}>
+                {weatherEmoji} {MOCK_WEATHER.temp}°C · {MOCK_WEATHER.condition}
+              </Text>
+              <Text style={styles.heroPlaceholderTitle}>
+                {language === "tr" ? "Günün kokusu hazırlanıyor" : "Preparing today's scent"}
+              </Text>
+              <Text style={styles.heroPlaceholderBody}>
+                {language === "tr" ? "Profiline göre en doğru eşleşmeyi seçiyoruz." : "Choosing the strongest match for your profile."}
+              </Text>
+            </View>
+          )}
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickActionsRow}>
@@ -529,26 +425,149 @@ export default function HomeScreen() {
           })}
         </ScrollView>
 
-        {loading && (
-          <View style={styles.loader}>
-            <ActivityIndicator color={colors.accent} />
-          </View>
-        )}
-
-        {sections && !loading && (
-          <>
-            {/* Today's Pick hero */}
-            {hero && (
-              <View style={{ paddingHorizontal: SPACING.xxl, gap: SPACING.sm }}>
-                <Text style={styles.todayEyebrow}>{t("home.todayPick").toUpperCase()}</Text>
-                <HeroCard rec={hero} onPress={() => go(hero.perfumeId)} />
-                <Text style={styles.heroCaption}>
-                  Bu koku bu anın atmosferiyle eşleştirildi.
+        {visibleCommunityPosts.length > 0 ? (
+          <View style={styles.communitySection}>
+            <View style={styles.communityHeader}>
+              <View style={{ gap: 3, flex: 1 }}>
+                <Text style={styles.communityEyebrow}>{language === "tr" ? "TOPLULUK" : "COMMUNITY"}</Text>
+                <Text style={styles.communityTitle}>
+                  {language === "tr" ? "Parfüm severlerin buluşma noktası" : "Where fragrance lovers meet"}
                 </Text>
               </View>
-            )}
+              <Pressable onPress={() => router.push("/create-post" as never)}>
+                <Text style={styles.communityAction}>{language === "tr" ? "Paylaş +" : "Share +"}</Text>
+              </Pressable>
+            </View>
+            {communityFeaturedPost ? (
+              <Pressable
+                style={styles.communityFeaturedCard}
+                onPress={() => router.push({ pathname: "/post/[id]", params: { id: communityFeaturedPost.id } } as never)}
+              >
+                <Text style={styles.communityCardMeta}>{communityFeaturedPost.authorName} · {communityFeaturedPost.type.toUpperCase()}</Text>
+                {communityFeaturedPost.mediaUrl ? (
+                  <View style={styles.communityFeaturedMediaWrap}>
+                    <PerfumeVisual
+                      perfume={{
+                        id: communityFeaturedPost.perfumeId ?? communityFeaturedPost.id,
+                        name: communityFeaturedPost.perfumeName ?? communityFeaturedPost.type,
+                        brand: communityFeaturedPost.perfumeBrand ?? "Scentify",
+                        gender: "unisex",
+                        topNotes: [],
+                        midNotes: [],
+                        baseNotes: [],
+                        families: ["Fresh"],
+                        longevity: 0,
+                        projection: 0,
+                        seasons: [],
+                        occasions: [],
+                        impressions: [],
+                        priceRange: "$$",
+                        scentVector: [],
+                      }}
+                      height={184}
+                      variant="card"
+                    />
+                  </View>
+                ) : null}
+                <Text style={styles.communityFeaturedBody} numberOfLines={4}>{communityFeaturedPost.caption}</Text>
+                <Text style={styles.communityCardFoot}>
+                  {communityFeaturedPost.likeCount} ♥ · {communityFeaturedPost.commentCount} 💬
+                </Text>
+                <View style={styles.communityActionsRow}>
+                  <Pressable
+                    style={styles.communityActionPill}
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      router.push({ pathname: "/post/[id]", params: { id: communityFeaturedPost.id, focusComment: "1" } } as never);
+                    }}
+                  >
+                    <Text style={styles.communityActionPillText}>{language === "tr" ? "Yorum Yap" : "Comment"}</Text>
+                  </Pressable>
+                  <Pressable
+                    style={styles.communityActionPill}
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      toggleSavedPost(communityFeaturedPost.id);
+                    }}
+                  >
+                    <Text style={styles.communityActionPillText}>
+                      {savedPostIds.includes(communityFeaturedPost.id)
+                        ? language === "tr" ? "Kaydedildi" : "Saved"
+                        : language === "tr" ? "Kaydet" : "Save"}
+                    </Text>
+                  </Pressable>
+                </View>
+              </Pressable>
+            ) : null}
+            <View style={styles.communityList}>
+              {communityFeedPosts.map((post) => (
+                <Pressable
+                  key={post.id}
+                  onPress={() => router.push({ pathname: "/post/[id]", params: { id: post.id } } as never)}
+                  style={styles.communityCard}
+                >
+                  <Text style={styles.communityCardMeta}>{post.authorName} · {post.type.toUpperCase()}</Text>
+                  {post.mediaUrl ? (
+                    <View style={styles.communityMediaWrap}>
+                      <PerfumeVisual
+                        perfume={{
+                          id: post.perfumeId ?? post.id,
+                          name: post.perfumeName ?? post.type,
+                          brand: post.perfumeBrand ?? "Scentify",
+                          gender: "unisex",
+                          topNotes: [],
+                          midNotes: [],
+                          baseNotes: [],
+                          families: ["Fresh"],
+                          longevity: 0,
+                          projection: 0,
+                          seasons: [],
+                          occasions: [],
+                          impressions: [],
+                          priceRange: "$$",
+                          scentVector: [],
+                        }}
+                        height={120}
+                        variant="thumb"
+                      />
+                    </View>
+                  ) : null}
+                  <Text style={styles.communityCardBody} numberOfLines={2}>{post.caption}</Text>
+                  <Text style={styles.communityCardFoot}>
+                    {post.likeCount} ♥ · {post.commentCount} 💬
+                  </Text>
+                  <View style={styles.communityActionsRow}>
+                    <Pressable
+                      style={styles.communityActionPill}
+                      onPress={(event) => {
+                        event.stopPropagation();
+                        router.push({ pathname: "/post/[id]", params: { id: post.id, focusComment: "1" } } as never);
+                      }}
+                    >
+                      <Text style={styles.communityActionPillText}>{language === "tr" ? "Yorum Yap" : "Comment"}</Text>
+                    </Pressable>
+                    <Pressable
+                      style={styles.communityActionPill}
+                      onPress={(event) => {
+                        event.stopPropagation();
+                        toggleSavedPost(post.id);
+                      }}
+                    >
+                      <Text style={styles.communityActionPillText}>
+                        {savedPostIds.includes(post.id)
+                          ? language === "tr" ? "Kaydedildi" : "Saved"
+                          : language === "tr" ? "Kaydet" : "Save"}
+                      </Text>
+                    </Pressable>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        ) : null}
 
-            {/* Best Matches — personalized eyebrow with top score */}
+        {sections ? (
+          <>
             <CarouselSection
               eyebrow={`SCENT DNA · %${topMatchScore} UYUM`}
               title={t("home.sections.bestMatches")}
@@ -556,7 +575,6 @@ export default function HomeScreen() {
               onPressItem={go}
             />
 
-            {/* Fresh Daily — weather-aware eyebrow */}
             {sections.freshDaily.length >= 2 && (
               <CarouselSection
                 eyebrow={`${MOCK_WEATHER.temp}°C İÇİN · GÜNLÜK TAZE`}
@@ -566,7 +584,6 @@ export default function HomeScreen() {
               />
             )}
 
-            {/* Night Out */}
             {sections.forNightOut.length >= 2 && (
               <CarouselSection
                 eyebrow="AKŞAM RİTMİ · GECE SEÇİMİ"
@@ -575,167 +592,8 @@ export default function HomeScreen() {
                 onPressItem={go}
               />
             )}
-
-            {/* Hidden Gems — new discovery section */}
-            {sections.hiddenGems.length >= 2 && (
-              <CarouselSection
-                eyebrow="KEŞFEDİLMEYİ BEKLİYOR"
-                title="Gizli Mücevherler"
-                items={sections.hiddenGems}
-                onPressItem={go}
-              />
-            )}
-
-            {/* Similar to Style */}
-            {sections.similarToStyle.length >= 2 && (
-              <CarouselSection
-                eyebrow="SANA ÖZGÜ · STİL PROFİLİN"
-                title={t("home.sections.similar")}
-                items={sections.similarToStyle}
-                onPressItem={go}
-              />
-            )}
-
-            {visibleCommunityPosts.length > 0 ? (
-              <View style={styles.communitySection}>
-                <View style={styles.communityHeader}>
-                  <Text style={styles.communityEyebrow}>{language === "tr" ? "TOPLULUK" : "COMMUNITY"}</Text>
-                  <Pressable onPress={() => router.push("/create-post" as never)}>
-                    <Text style={styles.communityAction}>{language === "tr" ? "Paylaş +" : "Share +"}</Text>
-                  </Pressable>
-                </View>
-                {communityFeaturedPost ? (
-                  <Pressable
-                    style={styles.communityFeaturedCard}
-                    onPress={() => router.push({ pathname: "/post/[id]", params: { id: communityFeaturedPost.id } } as never)}
-                  >
-                    <Text style={styles.communityCardMeta}>{communityFeaturedPost.authorName} · {communityFeaturedPost.type.toUpperCase()}</Text>
-                    {communityFeaturedPost.mediaUrl ? (
-                      <View style={styles.communityFeaturedMediaWrap}>
-                        <PerfumeVisual
-                          perfume={{
-                            id: communityFeaturedPost.perfumeId ?? communityFeaturedPost.id,
-                            name: communityFeaturedPost.perfumeName ?? communityFeaturedPost.type,
-                            brand: communityFeaturedPost.perfumeBrand ?? "Scentify",
-                            gender: "unisex",
-                            topNotes: [],
-                            midNotes: [],
-                            baseNotes: [],
-                            families: ["Fresh"],
-                            longevity: 0,
-                            projection: 0,
-                            seasons: [],
-                            occasions: [],
-                            impressions: [],
-                            priceRange: "$$",
-                            scentVector: [],
-                          }}
-                          height={184}
-                          variant="card"
-                        />
-                      </View>
-                    ) : null}
-                    <Text style={styles.communityFeaturedBody} numberOfLines={4}>{communityFeaturedPost.caption}</Text>
-                    <Text style={styles.communityCardFoot}>
-                      {communityFeaturedPost.likeCount} ♥ · {communityFeaturedPost.commentCount} 💬
-                    </Text>
-                    <View style={styles.communityActionsRow}>
-                      <Pressable
-                        style={styles.communityActionPill}
-                        onPress={(event) => {
-                          event.stopPropagation();
-                          router.push({ pathname: "/post/[id]", params: { id: communityFeaturedPost.id, focusComment: "1" } } as never);
-                        }}
-                      >
-                        <Text style={styles.communityActionPillText}>{language === "tr" ? "Yorum Yap" : "Comment"}</Text>
-                      </Pressable>
-                      <Pressable
-                        style={styles.communityActionPill}
-                        onPress={(event) => {
-                          event.stopPropagation();
-                          toggleSavedPost(communityFeaturedPost.id);
-                        }}
-                      >
-                        <Text style={styles.communityActionPillText}>
-                          {savedPostIds.includes(communityFeaturedPost.id)
-                            ? language === "tr" ? "Kaydedildi" : "Saved"
-                            : language === "tr" ? "Kaydet" : "Save"}
-                        </Text>
-                      </Pressable>
-                    </View>
-                  </Pressable>
-                ) : null}
-                <View style={styles.communityList}>
-                  {communityFeedPosts.map((post) => (
-                    <Pressable
-                      key={post.id}
-                      onPress={() => router.push({ pathname: "/post/[id]", params: { id: post.id } } as never)}
-                      style={styles.communityCard}
-                    >
-                      <Text style={styles.communityCardMeta}>{post.authorName} · {post.type.toUpperCase()}</Text>
-                      {post.mediaUrl ? (
-                        <View style={styles.communityMediaWrap}>
-                          <PerfumeVisual
-                            perfume={{
-                              id: post.perfumeId ?? post.id,
-                              name: post.perfumeName ?? post.type,
-                              brand: post.perfumeBrand ?? "Scentify",
-                              gender: "unisex",
-                              topNotes: [],
-                              midNotes: [],
-                              baseNotes: [],
-                              families: ["Fresh"],
-                              longevity: 0,
-                              projection: 0,
-                              seasons: [],
-                              occasions: [],
-                              impressions: [],
-                              priceRange: "$$",
-                              scentVector: [],
-                            }}
-                            height={120}
-                            variant="thumb"
-                          />
-                        </View>
-                      ) : null}
-                      <Text style={styles.communityCardBody} numberOfLines={2}>{post.caption}</Text>
-                      <Text style={styles.communityCardFoot}>
-                        {post.likeCount} ♥ · {post.commentCount} 💬
-                      </Text>
-                      <View style={styles.communityActionsRow}>
-                        <Pressable
-                          style={styles.communityActionPill}
-                          onPress={(event) => {
-                            event.stopPropagation();
-                            router.push({ pathname: "/post/[id]", params: { id: post.id, focusComment: "1" } } as never);
-                          }}
-                        >
-                          <Text style={styles.communityActionPillText}>{language === "tr" ? "Yorum Yap" : "Comment"}</Text>
-                        </Pressable>
-                        <Pressable
-                          style={styles.communityActionPill}
-                          onPress={(event) => {
-                            event.stopPropagation();
-                            toggleSavedPost(post.id);
-                          }}
-                        >
-                          <Text style={styles.communityActionPillText}>
-                            {savedPostIds.includes(post.id)
-                              ? language === "tr" ? "Kaydedildi" : "Saved"
-                              : language === "tr" ? "Kaydet" : "Save"}
-                          </Text>
-                        </Pressable>
-                      </View>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-            ) : null}
-
-            {/* Blog teaser */}
-            <BlogTeaser onPress={() => router.push("/(main)/journal" as never)} />
           </>
-        )}
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -974,28 +832,33 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       textAlign: "center",
       fontStyle: "italic",
     },
-    weatherStrip: {
-      marginHorizontal: SPACING.xxl,
-      backgroundColor: colors.surfaceAlt,
-      borderRadius: RADIUS.lg,
+    heroPlaceholder: {
+      minHeight: 210,
+      borderRadius: RADIUS.xl,
       borderWidth: 1,
       borderColor: colors.border,
-      paddingHorizontal: SPACING.md,
-      paddingVertical: SPACING.sm + 2,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
+      backgroundColor: colors.surfaceAlt,
+      padding: SPACING.xl,
+      justifyContent: "center",
+      gap: SPACING.sm,
     },
-    weatherText: {
+    heroPlaceholderKicker: {
       fontFamily: FONTS.sansMedium,
-      fontSize: 13,
-      color: colors.ink,
-    },
-    weatherContext: {
-      fontFamily: FONTS.sansMedium,
-      fontSize: 11,
+      fontSize: 12,
       color: colors.accent,
       letterSpacing: 0.3,
+    },
+    heroPlaceholderTitle: {
+      fontFamily: FONTS.serif,
+      fontSize: 28,
+      lineHeight: 33,
+      color: colors.ink,
+    },
+    heroPlaceholderBody: {
+      fontFamily: FONTS.sans,
+      fontSize: 13,
+      lineHeight: 19,
+      color: colors.inkMid,
     },
     quickActionsRow: {
       paddingHorizontal: SPACING.xxl,
@@ -1033,10 +896,6 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       fontFamily: FONTS.sans,
       fontSize: 10,
       color: colors.inkMid,
-    },
-    loader: {
-      paddingVertical: SPACING.xxxl,
-      alignItems: "center",
     },
     empty: {
       flex: 1,
@@ -1085,6 +944,12 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       textTransform: "uppercase",
       color: colors.accent,
     },
+    communityTitle: {
+      fontFamily: FONTS.serif,
+      fontSize: 24,
+      lineHeight: 28,
+      color: colors.ink,
+    },
     communityAction: {
       fontFamily: FONTS.sansSemiBold,
       fontSize: 13,
@@ -1105,11 +970,6 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       borderWidth: 1,
       borderColor: colors.borderLight,
       backgroundColor: colors.surface,
-    },
-    communityFeaturedMedia: {
-      width: "100%",
-      aspectRatio: 4 / 3,
-      resizeMode: "cover",
     },
     communityFeaturedBody: {
       fontFamily: FONTS.sansMedium,
@@ -1135,11 +995,6 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       borderWidth: 1,
       borderColor: colors.borderLight,
       backgroundColor: colors.surface,
-    },
-    communityMedia: {
-      width: "100%",
-      aspectRatio: 16 / 10,
-      resizeMode: "cover",
     },
     communityCardMeta: {
       fontFamily: FONTS.sansMedium,

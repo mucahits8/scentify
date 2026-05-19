@@ -4,6 +4,7 @@ import { calculateScentDNA } from "@/services/dna";
 import { fetchCurrentUserBundle, saveOnboardingToSupabase } from "@/services/user-data";
 import { mockDNA, mockPerfumes, mockProfile } from "@/services/mock-data";
 import { isSupabaseConfigured } from "@/services/supabase";
+import { DEMO_USER_ID, useAuthStore } from "@/stores/useAuthStore";
 import type { Perfume, ScentDNAProfile, UserProfile } from "@/utils/types";
 import type { BudgetPreference, GenderPreference, IntensityPreference } from "@/utils/types";
 
@@ -96,7 +97,10 @@ export const useUserStore = create<UserState>((set) => ({
       avoidNotes,
     );
 
-    if (isSupabaseConfigured) {
+    const authUserId = useAuthStore.getState().session?.user?.id;
+    const shouldPersistRemotely = isSupabaseConfigured && authUserId !== DEMO_USER_ID;
+
+    if (shouldPersistRemotely) {
       try {
         await saveOnboardingToSupabase({
           genderPreference,

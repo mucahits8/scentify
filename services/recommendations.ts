@@ -15,7 +15,7 @@ interface RecommendationConfig {
   genderPreference?: GenderPreference;
 }
 
-const RECOMMENDATION_POOL_LIMIT = 2400;
+const RECOMMENDATION_POOL_LIMIT = 360;
 const BEST_MATCHES_LIMIT = 12;
 const SECTION_LIMIT = 10;
 
