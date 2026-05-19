@@ -12,7 +12,7 @@ interface UserState {
   scentDNA: ScentDNAProfile | null;
   isHydrated: boolean;
   setProfile: (profile: UserProfile) => void;
-  bootstrap: () => Promise<void>;
+  bootstrap: (options?: { demo?: boolean }) => Promise<void>;
   clear: () => void;
   completeOnboarding: (args: {
     genderPreference?: GenderPreference;
@@ -34,10 +34,10 @@ export const useUserStore = create<UserState>((set) => ({
   scentDNA: null,
   isHydrated: false,
   setProfile: (profile) => set({ profile }),
-  bootstrap: async () => {
+  bootstrap: async (options) => {
     set({ isHydrated: false });
 
-    if (!isSupabaseConfigured) {
+    if (options?.demo || !isSupabaseConfigured) {
       set({ profile: mockProfile, scentDNA: mockDNA, isHydrated: true });
       return;
     }

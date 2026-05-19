@@ -3,6 +3,8 @@ import { create } from "zustand";
 
 import { getSession, onAuthStateChange } from "@/services/auth";
 
+export const DEMO_USER_ID = "demo-user";
+
 interface AuthState {
   session: Session | null;
   isHydrated: boolean;
@@ -34,7 +36,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         expires_at: Math.floor(Date.now() / 1000) + 3600,
         token_type: "bearer",
         user: {
-          id: "demo-user",
+          id: DEMO_USER_ID,
           app_metadata: {},
           user_metadata: { full_name: "Demo User" },
           aud: "authenticated",

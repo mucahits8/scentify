@@ -8,7 +8,7 @@ import type { CollectionItem, CollectionStatus } from "@/utils/types";
 interface CollectionState {
   items: CollectionItem[];
   isHydrated: boolean;
-  bootstrap: () => Promise<void>;
+  bootstrap: (options?: { demo?: boolean }) => Promise<void>;
   clear: () => void;
   seedDemoItems: () => Promise<void>;
   addItem: (perfumeId: string, status: CollectionStatus) => Promise<void>;
@@ -19,10 +19,10 @@ interface CollectionState {
 export const useCollectionStore = create<CollectionState>((set, get) => ({
   items: [],
   isHydrated: false,
-  bootstrap: async () => {
+  bootstrap: async (options) => {
     set({ isHydrated: false });
 
-    if (!isSupabaseConfigured) {
+    if (options?.demo || !isSupabaseConfigured) {
       set({ items: [], isHydrated: true });
       return;
     }

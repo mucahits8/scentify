@@ -51,7 +51,7 @@ interface SocialPrefsState {
   unblockUser: (userId: string) => void;
   blockUser: (user: BlockedUser) => void;
   resetSocialPrefs: () => void;
-  bootstrap: () => Promise<void>;
+  bootstrap: (options?: { demo?: boolean }) => Promise<void>;
   clear: () => void;
 }
 
@@ -171,9 +171,9 @@ export const useSocialPrefsStore = create<SocialPrefsState>()(
         });
         void resetRemoteSocialPrefs().catch(() => undefined);
       },
-      bootstrap: async () => {
+      bootstrap: async (options) => {
         set({ isHydrated: false });
-        if (!isSupabaseConfigured) {
+        if (options?.demo || !isSupabaseConfigured) {
           set({ isHydrated: true });
           return;
         }

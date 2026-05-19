@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { useAuthStore } from "@/stores/useAuthStore";
+import { DEMO_USER_ID, useAuthStore } from "@/stores/useAuthStore";
 import { useCollectionStore } from "@/stores/useCollectionStore";
 import { useSocialPrefsStore } from "@/stores/useSocialPrefsStore";
 import { useUserStore } from "@/stores/useUserStore";
@@ -30,9 +30,11 @@ export function useAppBootstrap() {
       return;
     }
 
-    void bootstrapUser();
-    void bootstrapCollection();
-    void bootstrapSocialPrefs();
+    const isDemoSession = sessionUserId === DEMO_USER_ID;
+
+    void bootstrapUser({ demo: isDemoSession });
+    void bootstrapCollection({ demo: isDemoSession });
+    void bootstrapSocialPrefs({ demo: isDemoSession });
   }, [
     authHydrated,
     sessionUserId,
