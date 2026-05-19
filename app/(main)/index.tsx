@@ -405,7 +405,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     (async () => {
-      const posts = await listCommunityPosts(8);
+      const posts = await listCommunityPosts(12);
       setCommunityPosts(posts);
     })();
   }, []);
@@ -413,7 +413,7 @@ export default function HomeScreen() {
   useEffect(() => {
     const unsubscribe = subscribeToCommunityFeed(() => {
       void (async () => {
-        const posts = await listCommunityPosts(8);
+        const posts = await listCommunityPosts(12);
         setCommunityPosts(posts);
       })();
     });
