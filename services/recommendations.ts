@@ -20,10 +20,10 @@ const BEST_MATCHES_LIMIT = 12;
 const SECTION_LIMIT = 10;
 
 function matchesGenderPreference(perfume: Perfume, genderPreference?: GenderPreference): boolean {
-  if (!genderPreference || genderPreference === "all") return true;
-  if (genderPreference === "men") return perfume.gender !== "women";
-  if (genderPreference === "women") return perfume.gender !== "men";
-  return true;
+  if (!genderPreference) return true;
+  if (genderPreference === "men") return perfume.gender === "men";
+  if (genderPreference === "women") return perfume.gender === "women";
+  return perfume.gender === "unisex";
 }
 
 async function loadRecommendationPool(genderPreference?: GenderPreference): Promise<Perfume[]> {
@@ -36,8 +36,7 @@ async function loadRecommendationPool(genderPreference?: GenderPreference): Prom
   } catch {}
 
   const filtered = catalog.filter((perfume) => matchesGenderPreference(perfume, genderPreference));
-  if (filtered.length > 0) return filtered;
-  return catalog.filter((perfume) => perfume.gender === "unisex");
+  return filtered;
 }
 
 // ─── Public: legacy/general getter (still used elsewhere) ───────────────────

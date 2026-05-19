@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { ActivityIndicator, Animated, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect, useRef } from "react";
@@ -187,6 +188,7 @@ export default function DNAResultScreen() {
       cta: "Show my matches",
     };
   const summary = scentDNA.summary?.trim() ? scentDNA.summary : copy.summaryFallback;
+  const dominantDimension = topProfileDimensions[0];
   const topReveal = {
     opacity: revealValue.interpolate({
       inputRange: [0, 1],
@@ -271,9 +273,29 @@ export default function DNAResultScreen() {
         </View>
 
         <Animated.View style={[styles.topSection, topReveal, titleParallax]}>
+          <LinearGradient
+            colors={["#17110D", "#3B281D", "#9A6744"]}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+          <View style={styles.resultGlow} />
+          <View style={styles.resultHeaderRow}>
+            <Text style={styles.resultLock}>{language === "tr" ? "DNA KİLİTLENDİ" : "DNA LOCKED"}</Text>
+            {dominantDimension ? (
+              <Text style={styles.resultScore}>{dominantDimension.value}%</Text>
+            ) : null}
+          </View>
           <Text style={styles.title}>{copy.identityLead}</Text>
           <Text style={styles.titleAccent}>{title}</Text>
           <Text style={styles.summary}>{summary}</Text>
+          <View style={styles.resultFooterRow}>
+            {topProfileDimensions.slice(0, 3).map((item) => (
+              <View key={item.key} style={styles.resultMiniPill}>
+                <Text style={styles.resultMiniPillText}>{formatDimensionLabel(item.key)} · {item.value}</Text>
+              </View>
+            ))}
+          </View>
         </Animated.View>
 
         <Animated.View style={[styles.chartSection, middleReveal, chartParallax]}>
@@ -358,13 +380,47 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
     topSection: {
       marginHorizontal: 20,
       marginTop: 2,
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      gap: 7,
-      borderRadius: 18,
+      paddingHorizontal: 18,
+      paddingVertical: 18,
+      gap: 9,
+      borderRadius: 26,
       borderWidth: 1,
-      borderColor: colors.borderLight,
-      backgroundColor: colors.surface,
+      borderColor: "rgba(255,248,241,0.18)",
+      backgroundColor: colors.heroSurface,
+      overflow: "hidden",
+    },
+    resultGlow: {
+      position: "absolute",
+      right: -46,
+      top: -54,
+      width: 170,
+      height: 170,
+      borderRadius: 85,
+      backgroundColor: "rgba(255,214,170,0.18)",
+    },
+    resultHeaderRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 8,
+    },
+    resultLock: {
+      fontFamily: FONTS.sansBold,
+      fontSize: 10,
+      letterSpacing: 2.2,
+      textTransform: "uppercase",
+      color: "rgba(255,248,241,0.72)",
+    },
+    resultScore: {
+      fontFamily: FONTS.sansBold,
+      fontSize: 13,
+      color: "#FFF8F1",
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: "rgba(255,248,241,0.22)",
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      overflow: "hidden",
     },
     eyebrow: {
       fontFamily: FONTS.sansBold,
@@ -384,20 +440,39 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       fontFamily: FONTS.serif,
       fontSize: 30,
       lineHeight: 34,
-      color: colors.ink,
+      color: "rgba(255,248,241,0.78)",
     },
     titleAccent: {
       fontFamily: FONTS.serif,
-      fontSize: 44,
-      lineHeight: 48,
-      color: colors.accent,
+      fontSize: 50,
+      lineHeight: 53,
+      color: "#FFF8F1",
     },
     summary: {
       fontFamily: FONTS.sans,
       fontSize: 15,
       lineHeight: 24,
-      color: colors.inkMid,
+      color: "rgba(255,248,241,0.78)",
       marginTop: 7,
+    },
+    resultFooterRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+      marginTop: 8,
+    },
+    resultMiniPill: {
+      borderRadius: 999,
+      backgroundColor: "rgba(255,248,241,0.12)",
+      borderWidth: 1,
+      borderColor: "rgba(255,248,241,0.16)",
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    resultMiniPillText: {
+      fontFamily: FONTS.sansSemiBold,
+      fontSize: 11,
+      color: "#FFF8F1",
     },
     tagsRow: {
       flexDirection: "row",

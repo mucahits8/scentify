@@ -49,7 +49,13 @@ export const useOnboardingStore = create<OnboardingState>()(
   persist(
     (set) => ({
       ...initialState,
-      setGenderPreference: (genderPreference) => set({ genderPreference }),
+      setGenderPreference: (genderPreference) =>
+        set({
+          genderPreference,
+          lovedPerfumeIds: [],
+          dislikedPerfumeIds: [],
+          ownedPerfumeIds: [],
+        }),
       toggleLoved: (id) => set((state) => ({ lovedPerfumeIds: toggleValue(state.lovedPerfumeIds, id) })),
       toggleDisliked: (id) => set((state) => ({ dislikedPerfumeIds: toggleValue(state.dislikedPerfumeIds, id) })),
       toggleOwned: (id) => set((state) => ({ ownedPerfumeIds: toggleValue(state.ownedPerfumeIds, id) })),

@@ -1,9 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { getPerfumes } from "@/services/perfumes";
 import { useOnboardingStore } from "@/stores/useOnboardingStore";
-import type { Perfume } from "@/utils/types";
+import type { GenderPreference, Perfume } from "@/utils/types";
 
-const ONBOARDING_CATALOG_LIMIT = 72;
+const ONBOARDING_CATALOG_LIMIT = 1200;
+
+function matchesSelectedGender(perfume: Perfume, genderPreference?: GenderPreference) {
+  if (!genderPreference) return true;
+  if (genderPreference === "men") return perfume.gender === "men";
+  if (genderPreference === "women") return perfume.gender === "women";
+  return perfume.gender === "unisex";
+}
 
 export function useOnboardingCatalog(searchQuery = "") {
   const catalogPerfumes = useOnboardingStore((s) => s.catalogPerfumes);
@@ -36,11 +43,7 @@ export function useOnboardingCatalog(searchQuery = "") {
 
   const perfumes = useMemo(() => {
     const normalized = searchQuery.trim().toLowerCase();
-    const filteredByGender = catalogPerfumes.filter((perfume) => {
-      if (genderPreference === "men") return perfume.gender === "men" || perfume.gender === "unisex";
-      if (genderPreference === "women") return perfume.gender === "women" || perfume.gender === "unisex";
-      return true;
-    });
+    const filteredByGender = catalogPerfumes.filter((perfume) => matchesSelectedGender(perfume, genderPreference));
 
     if (!normalized) return filteredByGender;
 
